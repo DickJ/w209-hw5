@@ -1,0 +1,237 @@
+<html>
+<head>
+<title>My Project</title>
+</head>
+<body>
+<p> Rich's Running Log</p>
+
+<script type="text/javascript" src="../d3/d3.min.js"></script>
+<script type="text/javascript">
+  // Set the initial type of display
+  var currentlyDisplayed = "dist" 
+
+  // Load Data
+  var dataset;
+  d3.csv("data.csv", function(data){
+    dataset = data
+    generateVis("By Distance", "Distance", "Distance");
+  });
+  
+  function switchVis() {
+    if (currentlyDisplayed == "dist") {
+      currentlyDisplayed = "speed"
+      UpdateVis("By Average Speed", "Avg. Speed", "Average Speed");
+    } else {
+      currentlyDisplayed = "dist"
+      UpdateVis("By Distance", "Distance", "Distance");
+    }
+  };
+
+  function generateVis(title_label, vertical_label, verticle_var){
+    // Add a button to switch the graph data
+    d3.select("body")
+      .append("p")
+      .append("text")
+      .attr("id", "button")
+      .attr("width", "100")
+      .attr("height", "25")
+      .attr("color", "cyan")
+      .text("Click Here To Switch Vis")
+      .on("click", function(d, i) {
+        switchVis()
+      });  
+
+    var w = 800;
+    var h = 220;
+    var barPadding = 2;
+    var padding = 25
+    var margin = {top: 20, right: 30, bottom: 30, left: 40},
+    width = w - margin.left - margin.right,
+    height = h - margin.top - margin.bottom;
+
+    var xScale = d3.scale.ordinal()
+                   .rangeRoundBands([0, width], .1);
+
+    var xAxis = d3.svg.axis()
+                  .scale(xScale)
+                  .orient("bottom");
+                  
+
+    var yScale = d3.scale
+                   .linear()
+                   .domain([0, d3.max(dataset, function(d) { return d[verticle_var][0];})])
+                   .range([0, h-50]);
+    
+    //var yAxis = d3.svg
+    //              .axis()
+		//              .scale(yScale)
+		//              .orient("right");
+
+    var svg = d3.select("body")
+		            .append("svg")
+		            .attr("width", width + margin.left + margin.right)
+		            .attr("height", height + margin.top + margin.bottom)
+                .append("g")
+                .attr("transform", "translate(" + margin.left + "," + margin.top + ")")
+                .attr("id", "chart");
+
+    // Set up text fields for clicks on a bar
+    d3.select("body")
+      .append("p")
+      .attr("id", "p_date")
+      .text("")
+    d3.select("body")
+      .append("p")
+      .attr("id", "p_dist")
+      .text("")
+    d3.select("body")
+      .append("p")
+      .attr("id", "p_time")
+    d3.select("body")
+      .append("p")
+      .attr("id", "p_speed")
+
+    // Grreat googly-moogly
+    // This draws the bars, sets the shading, and defines the on click behavior
+    svg.selectAll("rect")
+       .data(dataset)
+       .enter()
+       .append("rect")
+       .attr("class", "bar")
+       .attr("x", function(d, i) {
+	         return i * (w / dataset.length);
+       })
+       .attr("y", function(d) {
+	         return h - (yScale(d[verticle_var]));
+       })
+       .attr("width", w / dataset.length - barPadding)
+       .attr("height", function(d) {
+	         return yScale(d[verticle_var]);
+       })
+       .attr("fill", "#627579")       
+       .on("click", function(d, i) {
+           // Set all the colors back to the default before coloring a new rectangle
+           // otherwise we will end up with multiple colored rectangles
+           svg.selectAll("rect")
+              .attr("fill", "#627579")	 
+	            // Log so I can see wtf is going on
+	            console.log(d);
+            	console.log(i);	
+            	// Select only the rectangle I want to color
+            	svg.select("rect:nth-child("+(i+1)+")").attr("fill", "#3D2A26");		
+            	// Update Text
+            	d3.select("#p_date")
+            	  .text("Date: "+ d["Date"]);
+            	d3.select("#p_time")
+            	  .text("Time: "+ d["Total Time"]);
+            	d3.select("#p_dist")
+            	  .text("Distance: "+ d["Distance"] + d["Distance Unit"]);
+            	d3.select("#p_speed")
+            	  .text("Avg. Speed: "+ d["Average Speed"] + d["Speed Unit"]);	
+       });      
+    };
+
+  function UpdateVis(title_label, vertical_label, verticle_var){
+    // Clear everything away so taht we can update
+    d3.select("body")
+      .html("");
+
+    d3.select("body")
+      .append("p")
+      .html("Rich's Running Log");
+
+    // Add a button to switch the graph data
+    d3.select("body")
+      .append("p")
+      .append("text")
+      .attr("id", "button")
+      .attr("width", "100")
+      .attr("height", "25")
+      .attr("color", "cyan")
+      .text("Click Here To Switch Vis")
+      .on("click", function(d, i) {
+        switchVis()
+      }); 
+
+    var w = 800;
+    var h = 200;
+    var barPadding = 2;
+    var padding = 25
+
+    var xAxis = d3.svg.axis()
+                  .scale(x)
+                  .orient("bottom");
+
+    var yScale = d3.scale
+                   .linear()
+                   .domain([0, d3.max(dataset, function(d) { return d[verticle_var][0];})])
+                   .range([0, h-50]);
+    
+    var yAxis = d3.svg
+                  .axis()
+                  .scale(yScale)
+                  .orient("right");
+
+    var svg = d3.select("body")
+                .append("svg")
+                .attr("width", w)
+                .attr("height", h)
+                .attr("id", "chart");
+
+    // Set up text fields for clicks on a bar
+    d3.select("body")
+      .append("p")
+      .attr("id", "p_date")
+      .text("")
+    d3.select("body")
+      .append("p")
+      .attr("id", "p_dist")
+      .text("")
+    d3.select("body")
+      .append("p")
+      .attr("id", "p_time")
+    d3.select("body")
+      .append("p")
+      .attr("id", "p_speed")
+   
+    // Grreat googly-moogly
+    // This draws the bars, sets the shading, and defines the on click behavior
+    svg.selectAll("rect")
+       .data(dataset)
+       .enter()
+       .append("rect")
+       .attr("class", "bar")
+       .attr("x", function(d, i) {
+           return i * (w / dataset.length);
+       })
+       .attr("y", function(d) {
+           return h - (yScale(d[verticle_var]));
+       })
+       .attr("width", w / dataset.length - barPadding)
+       .attr("height", function(d) {
+           return yScale(d[verticle_var]);
+       })
+       .attr("fill", "#627579")       
+       .on("click", function(d, i) {
+           // Set all the colors back to the default before coloring a new rectangle
+           // otherwise we will end up with multiple colored rectangles
+           svg.selectAll("rect")
+              .attr("fill", "#627579")   
+              // Log so I can see wtf is going on
+              console.log(d);
+              console.log(i); 
+              // Select only the rectangle I want to color
+              svg.select("rect:nth-child("+(i+1)+")").attr("fill", "#3D2A26");    
+              // Update Text
+              d3.select("#p_date")
+                .text("Date: "+ d["Date"]);
+              d3.select("#p_time")
+                .text("Time: "+ d["Total Time"]);
+              d3.select("#p_dist")
+                .text("Distance: "+ d["Distance"] + d["Distance Unit"]);
+              d3.select("#p_speed")
+                .text("Avg. Speed: "+ d["Average Speed"] + d["Speed Unit"]);  
+       });      
+    };        
+</script>
+</body>
